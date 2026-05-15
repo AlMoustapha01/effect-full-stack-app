@@ -24,8 +24,28 @@ export class ConflictError extends Schema.TaggedError<ConflictError>()("Conflict
 }) {}
 
 export class DatabaseError extends Schema.TaggedError<DatabaseError>()("DatabaseError", {
-  cause: Schema.Unknown,
+  // Stored as a string (not Schema.Unknown) so encoding the error never leaks
+  // driver internals: postgres-js error objects can carry the query, params,
+  // and stack. Build instances via `databaseError(cause)` so the redaction is
+  // applied at every call site.
+  cause: Schema.String,
 }) {}
+
+/**
+ * Project an arbitrary thrown value into the small, safe string the
+ * `DatabaseError.cause` schema accepts. The postgres-js error class exposes
+ * a `code` (5-char SQLSTATE) — keep it when present; otherwise fall back to
+ * the error name. Never propagate the message or the query.
+ */
+export const databaseError = (cause: unknown): DatabaseError => {
+  let summary = "unknown"
+  if (cause && typeof cause === "object") {
+    const c = cause as { code?: unknown; name?: unknown }
+    if (typeof c.code === "string" && c.code.length > 0) summary = `pg:${c.code}`
+    else if (typeof c.name === "string" && c.name.length > 0) summary = c.name
+  }
+  return new DatabaseError({ cause: summary })
+}
 
 export type AppError =
   | NotFoundError

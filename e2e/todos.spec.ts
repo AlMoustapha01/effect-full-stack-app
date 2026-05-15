@@ -1,9 +1,8 @@
 import { expect, test } from "@playwright/test"
-
-const unique = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
+import { e2eEmail } from "./db"
 
 test("sign-up, create + toggle + delete a todo", async ({ page }) => {
-  const email = `user-${unique()}@example.com`
+  const email = e2eEmail("todos")
   const password = "password123"
 
   // Sign up

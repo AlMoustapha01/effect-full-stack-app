@@ -1,7 +1,7 @@
 import { Context, Effect, Layer } from "effect"
 import { and, desc, eq } from "drizzle-orm"
 import { Database } from "@/shared/server/db"
-import { DatabaseError, NotFoundError } from "@/shared/server/errors"
+import { DatabaseError, NotFoundError, databaseError } from "@/shared/server/errors"
 import { Todo } from "../domain/todo"
 import { todo } from "../schema"
 
@@ -42,7 +42,7 @@ export const TodosRepositoryLive = Layer.effect(
         Effect.tryPromise({
           try: () =>
             db.select().from(todo).where(eq(todo.userId, userId)).orderBy(desc(todo.createdAt)),
-          catch: (cause) => new DatabaseError({ cause }),
+          catch: databaseError,
         }).pipe(Effect.map((rows) => rows.map(toDomain))),
 
       create: ({ userId, title }) =>
@@ -53,7 +53,7 @@ export const TodosRepositoryLive = Layer.effect(
               .values({ userId, title })
               .returning()
               .then((r) => r[0]),
-          catch: (cause) => new DatabaseError({ cause }),
+          catch: databaseError,
         }).pipe(Effect.map(toDomain)),
 
       toggle: ({ id, userId }) =>
@@ -65,7 +65,7 @@ export const TodosRepositoryLive = Layer.effect(
                 .from(todo)
                 .where(and(eq(todo.id, id), eq(todo.userId, userId)))
                 .limit(1),
-            catch: (cause) => new DatabaseError({ cause }),
+            catch: databaseError,
           })
           const row = existing[0]
           if (!row) return yield* Effect.fail(new NotFoundError({ resource: "Todo", id }))
@@ -76,7 +76,7 @@ export const TodosRepositoryLive = Layer.effect(
                 .set({ completed: !row.completed, updatedAt: new Date() })
                 .where(eq(todo.id, id))
                 .returning(),
-            catch: (cause) => new DatabaseError({ cause }),
+            catch: databaseError,
           })
           return toDomain(updated[0])
         }),
@@ -88,7 +88,7 @@ export const TodosRepositoryLive = Layer.effect(
               .delete(todo)
               .where(and(eq(todo.id, id), eq(todo.userId, userId)))
               .returning({ id: todo.id }),
-          catch: (cause) => new DatabaseError({ cause }),
+          catch: databaseError,
         }).pipe(
           Effect.flatMap((rows) =>
             rows.length === 0

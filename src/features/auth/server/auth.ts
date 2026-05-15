@@ -13,6 +13,9 @@ export const auth = betterAuth({
     autoSignIn: true,
     requireEmailVerification: false,
     minPasswordLength: 8,
+    // Cap input length so the bcrypt round can't be turned into a CPU-DoS
+    // by an attacker submitting megabyte-sized passwords.
+    maxPasswordLength: 256,
   },
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days

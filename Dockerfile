@@ -25,6 +25,20 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN bun run build
 
+# ─────────── migrate ──────────────────────────────────────────
+# One-shot image for `drizzle-kit push` against the compose postgres.
+# Inherits node_modules from `deps` and ships just the files drizzle-kit
+# actually loads (schemas + config) — no bind-mount of host source needed.
+FROM base AS migrate
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json ./
+COPY drizzle.config.ts ./
+COPY tsconfig.json ./
+# drizzle-kit globs src/features/**/server/schema.ts — copying the whole
+# `src/features` tree is fine since only matching files are parsed.
+COPY src/features ./src/features
+CMD ["bun", "run", "db:push"]
+
 # ─────────── runner ───────────────────────────────────────────
 # Nitro's node-server preset emits a self-contained .output/. We run it under
 # Bun (matches the build runtime; srvx — Nitro's server abstraction — picks
