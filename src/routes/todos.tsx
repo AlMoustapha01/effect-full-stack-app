@@ -1,12 +1,12 @@
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
-import { getSession, signOut } from "@/features/auth/client"
+import { authClient } from "@/features/auth/client"
 import { TodoForm } from "@/features/todos/ui/components/todo-form"
 import { TodoList } from "@/features/todos/ui/components/todo-list"
 
 export const Route = createFileRoute("/todos")({
   beforeLoad: async () => {
-    const { data } = await getSession()
+    const { data } = await authClient.getSession()
     if (!data) throw redirect({ to: "/sign-in" })
     return { user: data.user }
   },
@@ -18,7 +18,7 @@ function TodosPage() {
   const router = useRouter()
 
   const handleSignOut = async () => {
-    await signOut()
+    await authClient.signOut()
     router.invalidate()
     router.navigate({ to: "/sign-in" })
   }

@@ -11,6 +11,10 @@ pre-commit:
 pre-push:
   parallel: true
   jobs:
+    - name: lint
+      run: bun run lint
+    - name: format
+      run: bun run format:check
     - name: typecheck
       run: bun run typecheck
     - name: test

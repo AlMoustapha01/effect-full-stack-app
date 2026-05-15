@@ -4,7 +4,7 @@ import { Schema } from "effect"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { signUp } from "@/features/auth/client"
+import { authClient } from "@/features/auth/client"
 import { SignUpInput } from "@/features/auth/domain/inputs"
 
 interface SignUpFormProps {
@@ -19,7 +19,7 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
     validators: { onChange: Schema.standardSchemaV1(SignUpInput) },
     onSubmit: async ({ value }) => {
       setServerError(null)
-      const result = await signUp.email(value)
+      const result = await authClient.signUp.email(value)
       if (result.error) {
         setServerError(result.error.message ?? "Sign-up failed")
         return

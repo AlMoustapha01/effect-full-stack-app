@@ -1,13 +1,14 @@
 import { HeadContent, Scripts, createRootRouteWithContext } from "@tanstack/react-router"
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import { TanStackDevtools } from "@tanstack/react-devtools"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools"
-import { useState } from "react"
+import type { QueryClient } from "@tanstack/react-query"
 
 import appCss from "../styles.css?url"
 
-export interface RouterContext {}
+export interface RouterContext {
+  queryClient: QueryClient
+}
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => ({
@@ -28,34 +29,22 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            staleTime: 30_000,
-            refetchOnWindowFocus: false,
-          },
-        },
-      })
-  )
-
+  // QueryClientProvider is wired by setupRouterSsrQueryIntegration in
+  // `src/router.tsx` (wrapQueryClient: true) so we don't mount one here.
   return (
     <html lang="en">
       <head>
         <HeadContent />
       </head>
       <body>
-        <QueryClientProvider client={queryClient}>
-          {children}
-          <TanStackDevtools
-            config={{ position: "bottom-right" }}
-            plugins={[
-              { name: "TanStack Router", render: <TanStackRouterDevtoolsPanel /> },
-              { name: "TanStack Query", render: <ReactQueryDevtoolsPanel /> },
-            ]}
-          />
-        </QueryClientProvider>
+        {children}
+        <TanStackDevtools
+          config={{ position: "bottom-right" }}
+          plugins={[
+            { name: "TanStack Router", render: <TanStackRouterDevtoolsPanel /> },
+            { name: "TanStack Query", render: <ReactQueryDevtoolsPanel /> },
+          ]}
+        />
         <Scripts />
       </body>
     </html>

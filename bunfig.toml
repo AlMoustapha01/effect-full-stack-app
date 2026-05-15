@@ -1,0 +1,9 @@
+# Bun config.
+#
+# [test] limits Bun's built-in test runner to `src/` so that
+#   - `bun test`              (the runner) doesn't pick up `e2e/*.spec.ts`
+#   - `bun run test`          (the package.json script → vitest) is unaffected
+# We rely on vitest for unit tests; `bun test` is here only as a safety net
+# for one-off scripts under `src/`.
+[test]
+root = "src"

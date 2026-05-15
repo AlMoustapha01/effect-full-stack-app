@@ -3,7 +3,7 @@
 # Multi-stage production image for the TanStack Start / Nitro app.
 # Built with Bun; runtime is a Node-compatible Nitro server.
 
-ARG BUN_VERSION=1.2.2
+ARG BUN_VERSION=1.3.14
 
 # ─────────── base ─────────────────────────────────────────────
 FROM oven/bun:${BUN_VERSION}-alpine AS base

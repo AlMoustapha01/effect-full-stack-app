@@ -4,7 +4,7 @@ import { Schema } from "effect"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { signIn } from "@/features/auth/client"
+import { authClient } from "@/features/auth/client"
 import { SignInInput } from "@/features/auth/domain/inputs"
 
 interface SignInFormProps {
@@ -19,7 +19,7 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
     validators: { onChange: Schema.standardSchemaV1(SignInInput) },
     onSubmit: async ({ value }) => {
       setServerError(null)
-      const result = await signIn.email(value)
+      const result = await authClient.signIn.email(value)
       if (result.error) {
         setServerError(result.error.message ?? "Authentication failed")
         return
