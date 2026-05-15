@@ -1,0 +1,53 @@
+version: 2
+updates:
+  # JS dependencies. Bun lockfile is supported through the npm ecosystem.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    groups:
+      tanstack:
+        patterns:
+          - "@tanstack/*"
+      effect:
+        patterns:
+          - "effect"
+          - "@effect/*"
+      drizzle:
+        patterns:
+          - "drizzle-orm"
+          - "drizzle-kit"
+      tailwind:
+        patterns:
+          - "tailwindcss"
+          - "@tailwindcss/*"
+          - "tw-animate-css"
+      shadcn:
+        patterns:
+          - "shadcn"
+          - "@base-ui/*"
+      types:
+        patterns:
+          - "@types/*"
+    ignore:
+      # zod is pinned to v4 because better-auth requires v4 (.meta()) while
+      # several TanStack build tools keep v3 in their dependencies tree.
+      # Don't let Dependabot try to bump it under us — see CLAUDE.md.
+      - dependency-name: "zod"
+        update-types: ["version-update:semver-major"]
+
+  # GitHub Actions used by the CI workflow.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+
+  # Dockerfile base image (Bun + Postgres in compose.yml).
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
