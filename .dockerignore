@@ -1,0 +1,45 @@
+# VCS
+.git
+.gitignore
+
+# Dependencies (re-installed in image)
+node_modules
+
+# Build outputs (re-built in image)
+.output
+.nitro
+.tanstack
+dist
+dist-ssr
+
+# Env files (passed via compose / runtime)
+.env
+.env.local
+.env.*.local
+.env.test
+
+# Local-only
+.DS_Store
+*.log
+*.tsbuildinfo
+.vite
+
+# Tests / docs (not needed at runtime nor at build)
+e2e
+playwright-report
+test-results
+blob-report
+playwright/.cache
+coverage
+docs
+
+# Editor / OS
+.vscode
+.idea
+.cursor
+
+# Docker itself
+Dockerfile
+compose.yml
+docker-compose.yml
+.dockerignore

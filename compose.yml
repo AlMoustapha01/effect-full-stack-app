@@ -1,0 +1,72 @@
+# Local dev: `docker compose up -d`              → just postgres (use with `bun dev`)
+# Containerized run: `docker compose --profile app up -d --build` → postgres + app
+#
+# After bringing postgres up the first time, apply the schema:
+#   bun db:push          (from host)            — or —
+#   docker compose run --rm migrate              (from compose, profile: migrate)
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: effect-app-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app
+    # Host port defaults to 5433 to avoid collisions with a local/system
+    # postgres on 5432. Override with `POSTGRES_PORT=5432 docker compose up`.
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d app"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Containerized production build of the app.
+  # Opt-in: `docker compose --profile app up -d --build`
+  app:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: effect-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/app
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required (export it or put it in .env)}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
+      NODE_ENV: production
+      PORT: "3000"
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # One-shot schema push against the compose postgres.
+  # Run: `docker compose --profile migrate run --rm migrate`
+  migrate:
+    profiles: ["migrate"]
+    image: oven/bun:1.2.2-alpine
+    working_dir: /app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/app
+    volumes:
+      - .:/app
+    command: sh -c "bun install --frozen-lockfile --ignore-scripts && bun db:push"
+
+volumes:
+  postgres-data:
